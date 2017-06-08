@@ -179,7 +179,7 @@ https://openapi-iot.baidu.com/v1/device/bind
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备唯一的标识id|
 |token|string|设备绑定的token|
 
@@ -224,7 +224,7 @@ https://openapi-iot.baidu.com/v1/device/name/update
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备唯一的标识id|
 |name|string|设备名称|
 
@@ -278,7 +278,7 @@ https://openapi-iot.baidu.com/v1/device/unbind
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备唯一的标识id|
 
 
@@ -314,7 +314,7 @@ https://openapi-iot.baidu.com/v1/device/bind/list
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |start |int|起始元素, 默认0|
 |limit |int| 每页大小, 每页的个数，默认20且不得超过1000|
 
@@ -381,7 +381,7 @@ X-IOT-Token: {token}
 
 + parameters
 |名称|说明|
-|-|
+|-|-|
 |version|设备使用版本：0为研发中的设备，1为投入使用的设备|
 
 ###### **2.5根据设备UUID和token获取指定设备详细信息 [GET /device/info/by_token]**
@@ -393,7 +393,7 @@ https://openapi-iot.baidu.com/v1/device/info/by_token?deviceUuid=[deviceUuid]&to
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备唯一的标识id|
 |token|string|设备token|
 
@@ -445,7 +445,7 @@ https://openapi-iot.baidu.com/v1/device/info/by_uuid?deviceUuid=[deviceUuid]
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备唯一的标识id|
 
 
@@ -491,7 +491,7 @@ https://openapi-iot.baidu.com/v1/device/resource?deviceUuid=[deviceUuid]
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备唯一的标识id|
 
 
@@ -653,7 +653,7 @@ https://openapi-iot.baidu.com/v1/device/query/data/connect
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuids|string[ ]|设备uuid数组,一次最多查询20个设备uuid|
 
 
@@ -699,7 +699,7 @@ https://openapi-iot.baidu.com/v1/device/query/data/history?deviceUuid=[deviceUui
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string| 设备ID|
 |propertyKey|string| 数据点，可选，不选默认全部数据点
 |propertyType|string| 数据点类型（REPORT,RESOURCE），可选，不选默认全部数据点
@@ -756,7 +756,7 @@ https://openapi-iot.baidu.com/v1/device/query/data/realtime
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string| 设备ID
 | propertyKey |string| 设备自描述上报的字段，比如空调有温度属性（temperature），设备会上报temperature这个字段，那么对温度的历史数据查询就是：propertyKey = temperature
 
@@ -791,7 +791,7 @@ https://openapi-iot.baidu.com/v1/device/ota/new_version?deviceUuid=[deviceUuid]
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备ID|
 
 
@@ -877,7 +877,7 @@ https://openapi-iot.baidu.com/v1/device/ota/update
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |packageId|string|OTA版本id|
 |deviceUuid|string|设备uuid|
 |strategyId|string||
@@ -918,7 +918,7 @@ https://openapi-iot.baidu.com/v1/device/ota/update/status?deviceUuid=[deviceUuid
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |deviceUuid|string|设备uuid|
 
 
