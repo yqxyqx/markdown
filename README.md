@@ -380,6 +380,7 @@ X-IOT-Token: {token}
 ```
 
 + parameters
+
 |名称|说明|
 |-|-|
 |version|设备使用版本：0为研发中的设备，1为投入使用的设备|
@@ -590,6 +591,7 @@ X-IOT-Token: {token}
 }
 ```
 + parameters
+
 |resourceType|说明|
 |-|-|
 |voice|语音数据点|
@@ -836,7 +838,7 @@ https://openapi-iot.baidu.com/v1/device/ota/version/info?packageId=[packageId]
 + parameters
 
 |名称|类型|说明|
-|-|-|
+|-|-|-|
 |packageId|long|OTA版本id|
 
 
