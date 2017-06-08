@@ -950,6 +950,7 @@ X-IOT-Token: {token}
 ```
 
 + parameters
+
 |status|添加字段|说明|
 |-|-|-|
 |CREATED||暂未开始升级|
