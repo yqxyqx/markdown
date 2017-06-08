@@ -480,7 +480,7 @@ X-IOT-Token: {token}
   "total": 1
 }
 ```
-##### 3.设备控制
+##### 3、设备控制
 ###### **3.1*获取设备自描述资源 [GET /device/resource]**
 **Request**
 
@@ -642,7 +642,7 @@ X-IOT-Token: {token}
 }
 ```
 
-##### 4.数据查询
+##### 4、数据查询
 ###### **4.1查询设备是否在线 [POST /device/query/data/connect]** 
 **Request**
 
@@ -780,7 +780,7 @@ X-IOT-Token: {token}
     "total": 1
 }
 ```
-##### 5.用户设备升级
+##### 5、用户设备升级
 ###### **5.1*查询设备最新版本 [GET /device/ota/new_version]**
 **Request**
 
@@ -819,6 +819,7 @@ X-IOT-Token: {token}
 }
 ```
 + parameters
+
 |data|otaTaskId|说明|
 |-|-|-|
 |null||设备不需要升级|
