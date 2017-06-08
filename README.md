@@ -3,6 +3,7 @@
 ### 2.5. open api @云翔（本期暂无）client_id 
 #### 2.5.1. open api概述
 -open api的功能？
+-open api的功能？
 -open api适合谁使用？在什么情况下使用？
 
 
