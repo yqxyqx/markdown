@@ -1,7 +1,7 @@
-# 未命名笔记
+# openapi
 
-###2.5. open api @云翔（本期暂无）client_id 
-####2.5.1. open api概述
+### 2.5. open api @云翔（本期暂无）client_id 
+#### 2.5.1. open api概述
 -open api的功能？
 -open api适合谁使用？在什么情况下使用？
 
@@ -27,7 +27,7 @@
 |-|-|
 |★|调用这些接口，需要设备与用户先进行绑定|
 
-######**使用接口必要的流程和配置**
+###### **使用接口必要的流程和配置**
 +  先使用百度账号登录console云平台（http://......）
 +  新建一个产品，默认会产生20个测试设备，或者通过创建批次获取更多的设备
 	+  可有设备使用，主要使用设备的数据是deviceUuid和相应的token（bind_token）
@@ -40,7 +40,7 @@
 +  以上步骤都完成，此文档的接口才能使用
 	+  目前为了测试此文档接口，我们已经把以上步骤全部做完，绑定产品的projectId为424，可从device表中选出424产品的设备做测试
 
-#####3. 测试OTA接口的必要流程
+##### 3. 测试OTA接口的必要流程
 +  明确烧入设备所用profile的uuid，所属的批次id、批次号、固件版本号
 +  添加一个固件版本，版本号大于现有最新版本号
 + 点击查看，进入详细信息，进入立马验证页面
@@ -80,8 +80,8 @@
 |2007|device version is higher than package version|
 
 
-####2.5.3. open api功能
-#####1、移动客户端(Android/iOS/SDK) OAuth 相关接口
+#### 2.5.3. open api功能
+##### 1、移动客户端(Android/iOS/SDK) OAuth 相关接口
 ###### **1.1用户登陆授权 [GET /account/authorize]**
 **Request**
 
@@ -168,7 +168,7 @@ X-IOT-Token: {token}
   "message": ""
 }
 ```
-#####2、设备绑定相关接口
+##### 2、设备绑定相关接口
 
 ###### **2.1 用户绑定设备 [POST /device/bind]**
 **Request**
@@ -268,7 +268,7 @@ X-IOT-Token: {token}
 }
 ```
 
-######**2.3*解除绑定 [POST /device/unbind]**
+###### **2.3*解除绑定 [POST /device/unbind]**
 **Request**
 
 + url 
@@ -304,7 +304,7 @@ X-IOT-Token: {token}
 }
 ```
 
-######**2.4获取用户所有绑定的设备 [GET /device/bind/list]**
+###### **2.4获取用户所有绑定的设备 [GET /device/bind/list]**
 **Request**
 
 + url 
@@ -383,7 +383,7 @@ X-IOT-Token: {token}
 |-|
 |version|设备使用版本：0为研发中的设备，1为投入使用的设备|
 
-######**2.5根据设备UUID和token获取指定设备详细信息 [GET /device/info/by_token]**
+###### **2.5根据设备UUID和token获取指定设备详细信息 [GET /device/info/by_token]**
 **Request**
 
 + url 
@@ -435,7 +435,7 @@ X-IOT-Token: {token}
 }
 ```
 
-######**2.6*根据设备UUID获取指定设备详细信息（需要用户绑定设备）[GET /device/info/by_uuid]**
+###### **2.6*根据设备UUID获取指定设备详细信息（需要用户绑定设备）[GET /device/info/by_uuid]**
 **Request**
 
 + url 
@@ -481,7 +481,7 @@ X-IOT-Token: {token}
 }
 ```
 ##### 3.设备控制
-######**3.1*获取设备自描述资源 [GET /device/resource]**
+###### **3.1*获取设备自描述资源 [GET /device/resource]**
 **Request**
 
 + url 
@@ -594,7 +594,7 @@ X-IOT-Token: {token}
 |voice|语音数据点|
 
 
-### 3.4*对指定设备发送控制命令 （同步）[POST /device/control/send]
+###### **3.4*对指定设备发送控制命令 （同步）[POST /device/control/send]**
 **Request**
 
 + url 
@@ -825,7 +825,7 @@ X-IOT-Token: {token}
 |不为null|大于0|设备正在升级|
 |不为null|otaTaskId=0|type为 “PASSIVE”，需要用户手动升级|
 
-###  5.2获取版本详情 [GET /device/ota/version/info]
+###### **5.2获取版本详情 [GET /device/ota/version/info]**
 **Request**
 
 + url 
@@ -866,7 +866,7 @@ X-IOT-Token: {token}
  }
 ```
 
-######**5.3*指定设备按照指定OTA版本升级 [POST /device/ota/update]**
+###### **5.3*指定设备按照指定OTA版本升级 [POST /device/ota/update]**
 **Request**
 
 + url 
