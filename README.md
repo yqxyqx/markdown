@@ -1,5 +1,3 @@
-[TOC]
-
 **APP SDK文档**
 # 1 SDK概述 ##
 ## 1.1 SDK功能概述
@@ -142,6 +140,7 @@ dependencies {
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |Context|context|当前Context对象|
