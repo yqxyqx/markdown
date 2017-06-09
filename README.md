@@ -1,965 +1,705 @@
-# openapi
+[TOC]
 
-### 2.5. open api @云翔（本期暂无）client_id 
-#### 2.5.1. open api概述
--open api的功能？
--open api的功能？
--open api适合谁使用？在什么情况下使用？
-
-
-#### 2.5.2. 获取方式
-##### 1. 接口访问签名
-部分接口需要提供在HTTP Header里面提供签名才能被允许访问.
-签名`X-IOT-Signature`生成方法如下:
-`{nonce}:SHA1({nonce}+{apikey}+{secret}+{token})`
-各参数说明:
-- `nonce` (string) 由16个随机字符组成: a-z, A-Z, 0-9; 同一个Nonce只能使用一次, 每次请求接口都必须重新生成
-- `apikey` (string) API KEY
-- `secret` (string) 密钥
-	- **WEB应用** 使用 APP Secret Key
-	- **Android应用** 使用 包名+apk签名
-	- **iOS应用** 使用 BundleID
-- `token` (string) APP得到用户授权后拿到的`access_token`, 如果某些接口不需要验证该token, 则该值填空
-
-##### 2. 接口标签说明
-**部分接口会有★标签，调用这些接口需要前提条件**
-
-|标签|说明|
-|-|-|
-|★|调用这些接口，需要设备与用户先进行绑定|
-
-###### **使用接口必要的流程和配置**
-+  先使用百度账号登录console云平台（http://......）
-+  新建一个产品，默认会产生20个测试设备，或者通过创建批次获取更多的设备
-	+  可有设备使用，主要使用设备的数据是deviceUuid和相应的token（bind_token）
-+  为产品添加数据点（或者直接添加数据点模板）
-	+  可有控制数据点使用
-+  创建APP
-	+  获得appId，AK，SK，根据不用的应用系统配置相应的参数，用于身份签名和验证
-+  产品和APP做绑定
-	+  产品绑定到APP后，APP才能绑定控制产品相应的设备
-+  以上步骤都完成，此文档的接口才能使用
-	+  目前为了测试此文档接口，我们已经把以上步骤全部做完，绑定产品的projectId为424，可从device表中选出424产品的设备做测试
-
-##### 3. 测试OTA接口的必要流程
-+  明确烧入设备所用profile的uuid，所属的批次id、批次号、固件版本号
-+  添加一个固件版本，版本号大于现有最新版本号
-+ 点击查看，进入详细信息，进入立马验证页面
-+ 输入uuid，验证设备升级状态，验证通过后，点击通过验证
-+ 返回详细信息页面，创建策略。如果想让设备有升级策略，需要注意以下填写方法
-	+ 升级方式：选择用户确认升级，设备就不会静默升级
-	+ 旧版本中必须包含测试设备现有版本号
-	+ 批次筛选中必须包含测试设备所属的批次号
-+ 确认策略后，点击策略发布
-+  以上步骤都完成，OTA相关接口测试才会有效，否则设备不会正常升级
-
-**错误码**定义如下:
-
+**APP SDK文档**
+# 1 SDK概述 ##
+## 1.1 SDK功能概述
+SDK包含设备绑定、设备控制、设备信息获取、设备解绑以及OTA升级等接口,方便开发者在App开发过程中对设备进行相关操作。SDK包含一个原型App开发者可以通过在原型App的基础上开发自己的App,也可以参照原型App开发自己的App。
+## 1.2 名词解释
+|Status Code|Method
+|:-:|:-|
+|AppKey|开发者在开放平台申请的账号后创建应用后会生成对应的AppKey|
+|SecretKey|开发者在开放平台申请的账号后创建应用后会生成对应的SecretKey|
+|AccessToken|表示用户身份的Token,调用各类App时需要,用户登录百度账号授权后可获得。注：也可使用第三方账号体系,登陆后将其传入即可|
+|HttpCode|调用网络请求接口Http状态码|
+|ResponseCode|调用网络请求接口时内部状态码|
+|Message|调用网络请求时对应ResponseCode的状态信息|
+### 1.2.1 HttpCode说明
+|Status Code|Method|说明|
+|:-:|:-:|-|
+|200|GET/POST|成功返回用户数据|
+|201|POST/PUT|用户新建或者修改数据成功|
+|202|*|成功收到一个请求（异步处理）|
+|204|DELETE|成功删除|
+|401|*|用户验证错误（比如token错误,密码错误）|
+|403|*|用户不具备权限（但是用户本身的验证是通过的）|
+|404|*|URI或者资源不存在|
+|405         |  * | method不支持|
+|406|*|request格式错误（比如是xml格式,或者缺少某些关键参数）|
+|500|*|服务器本身错误|
+### 1.2.2 ResponseCode说明
 |code|含义|
-|-----|---|
-|1204|project id error|
-|1208|device uuid invalid|
-|1209|device not exist|
-|1211|accountUuid not found|
-|1212|user and devices do not bind|
-|1218|'user no permissions|
-|1219|device token invalid|
-|1223|app not bind project|
-|1228|token and device do not match|
-|1305|command name invalid|
-|1308|method invalid|
-|1401|data query params invalid|
-|1506|package id invalid|
-|1801|device id is empty|
-|1802|account has not power to access this device|
-|1803|the number of device beyond 20|
-|1902|lack of strategy id or valid|
-|1905|user can not use this strategy id|
-|2001|create ota task params is error|
-|2004|device is running to update|
-|2005|task id or device uuid is error|
-|2007|device version is higher than package version|
-
-
-#### 2.5.3. open api功能
-##### 1、移动客户端(Android/iOS/SDK) OAuth 相关接口
-###### **1.1用户登陆授权 [GET /account/authorize]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/account/authorize?client_id=[client_id]&response_type=[response_type]&state=[state]&scope=[scope]&redirect_uri=[redirect_uri]
-
-+ Parameters
-|名称|类型|说明|
 |-|-|
-|client_id|string|填写appid
-|response_type| string| 直接填写值: token, 使用简化模式|
-|state|string| 客户端的当前状态, 可以指定任意字符串，认证服务器会原封不动地返回这个值|
-|scope|string|APP所需要的权限范围, 多个权限范围用逗号’,’分隔; 该参数内容必须不多于APP在开发者中心申请的权限范围|
-|redirect_uri|string|直接填写http://iam.iot.baidu.com/v1/iam/oauth/receive_implicit_token, 使用urlencode编码,拼接示例:/account/authorize?response_type=token&client_id=1234567&state=123&redirect_uri=http://iam.iot.baidu.com/v1/iam/oauth/receive_implicit_token,用户登录（百度账号）并授权操作完成后会跳转到redirect_uri回调地址并带上相关返回参数; access_token,state,expires_in
+|0|正常返回,此时message为空|
+|1001|认证失败|
+|2001|资源不存在|
+|2002|参数错误|
+|2003|内部数据错误|
+|3000|数据库错误|
+|1201|项目名称无效|
+|1202|项目描述无效|
+|1203|项目名称不存在|
+|1204|项目id错误|
+|1205|注册版本无效|
+|1206|注册硬件版本无效|
+|1207|注册设备数目无效|
+|1208|设备id无效|
+|1210|设备已经被绑定|
+|1223|app没有绑定产品|
+|1301|一组设备id无效|
+|1302|地域无效|
+|1303|账号无效|
+|1304|项目id无效|
+|1305|relativeUri无效|
+|1306|超时时长无效|
+|1307|protocol无效|
+|1308|method无效|
+|1309|taskId无效|
+|1310|设备id无效|
+|1401|时间无效|
+|1501|文件不存在|
+|1502|文件格式出错|
+|1503|创建ota包出错|
+|1504|ota版本出错|
+|1505|ota状态出错|
 
-**Response 302**
 
-+ Headers 
-Location: http://iam.iot.baidu.com/v1/iam/oauth/receive_implicit_token/#access_token=eed3d99f7122cee3bcf7ce5d500a0ffb&state=123&scope=allScope&expires_in=5184000
+# 2 集成准备 ##
+## 2.1  Android Studio集成
+aar下载地址：
+http://open.duer.baidu.com/iot/download/duer-light-android-sdk-v1.0.0-release.aar
 
-+ Parameters
-|名称|类型|说明|
-|-|-|
-|access_token|string|API访问令牌
-|state|string|返回请求时传入的state参数
-|expire|int|过期时间(秒)
-
-###### **1.2检查Token是否有效 [GET /account/validate]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/account/validate
-
-+ Headers
+复制duer-light-android-sdk-v1.0.0-release.aarr到项目/app/src/aar/目录 
+在gradle文件中添加依赖
 ```
-http
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-**Response 200**
-```
-{
-    "data": true,
-    "code": "0",
-    "message": ""
-}
-```
-**异常输出**
-|status|说明|
-|-|-|
-|404|access_token不存在|
-|426|access_token过期，需要重新授权|
-|500|服务器错误|
-
-###### **1.3获取用户信息 [GET /account/infos]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/account/infos
-
-+ Headers
-```
-http
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": {
-    "uuid": "5_2500292884",
-    "originId": "2500292884",
-    "originType": "USER_BAIDU_PASSPORT",
-    "userName": "test7777",
-    "displayName": "test7777",
-    "status": "ENABLE",
-    "createTime": "2017-03-22T05:46:19Z"
-  },
-  "code": "0",
-  "message": ""
-}
-```
-##### 2、设备绑定相关接口
-
-###### **2.1 用户绑定设备 [POST /device/bind]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/bind
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-|token|string|设备绑定的token|
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-+ body
-```
-{
-    "deviceUuid": "0083000000000a",
-    "token": "6dd5790b2163a0132e6c65c6dd6f9ef2"
-}
-```
-
-**Response 200 (application/json)**
-```
-{
-    "data": true,
-    "code": "0",
-    "message": ""
-}
-```
-+ 异常输出
-
-|status|说明|
-|-|-|
-|404|	accountUuid not found|
-|406|device has been bind!|
-|500|	服务器错误|
-
-###### **2.2*修改绑定设备名称 [PUT /device/name/update]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/name/update
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-|name|string|设备名称|
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-+ body
-```
-{
-    "deviceUuid": "0083000000000a",
-    "name": "testname"
-}
-```
-
-**Response 201 (application/json)**
-```
-{
-  "data": {
-    "id": 22288,
-    "uuid": "0083000000000a",
-    "projectId": 131,
-    "accountUuid": "5_27712168",
-    "deviceBatchId": 106,
-    "name": "testname",
-    "bindToken": "6dd5790b2163a0132e6c65c6dd6f9ef2",
-    "osVersionId": 160,
-    "status": "UNACTIVATED",
-    "version": 1,
-    "activateTime": null,
-    "lastHeartbeatTime": null,
-    "createTime": "2017-06-07T02:46:30Z",
-    "updateTime": "2017-06-07T06:10:14Z"
-  },
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
-
-###### **2.3*解除绑定 [POST /device/unbind]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/unbind
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-+ body
-```
-{
-    "deviceUuid": "0083000000000a"
-}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": true,
-  "code": 0,
-  "message": ""
-}
-```
-
-###### **2.4获取用户所有绑定的设备 [GET /device/bind/list]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/bind/list
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|-|
-|start |int|起始元素, 默认0|
-|limit |int| 每页大小, 每页的个数，默认20且不得超过1000|
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": [
-    {
-      "id": 22289,
-      "projectId": 131,
-      "accountUuid": "5_27712168",
-      "deviceBatchId": 106,
-      "name": "",
-      "bindToken": "9614b7fd4af0305d412056cc0391d4b1",
-      "osVersionId": 160,
-      "status": "UNACTIVATED",
-      "version": 1,
-      "activateTime": null,
-      "lastHeartbeatTime": null,
-      "createTime": "2017-06-07T02:46:30Z",
-      "updateTime": "2017-06-07T02:46:30Z",
-      "osVersion": "0.0.0.0",
-      "deviceUuid": "0083000000000b",
-      "projectName": "doc_test",
-      "type": "WIFI",
-      "seriesName": "故事机"
-    },
-    {
-      "id": 22288,
-      "projectId": 131,
-      "accountUuid": "5_27712168",
-      "deviceBatchId": 106,
-      "name": "testname",
-      "bindToken": "6dd5790b2163a0132e6c65c6dd6f9ef2",
-      "osVersionId": 160,
-      "status": "UNACTIVATED",
-      "version": 1,
-      "activateTime": null,
-      "lastHeartbeatTime": null,
-      "createTime": "2017-06-07T02:46:30Z",
-      "updateTime": "2017-06-07T06:10:14Z",
-      "osVersion": "0.0.0.0",
-      "deviceUuid": "0083000000000a",
-      "projectName": "doc_test",
-      "type": "WIFI",
-      "seriesName": "故事机"
+repositories{
+    flatDir {
+        dirs 'libs'
     }
-  ],
-  "code": 0,
-  "message": "",
-  "limit": 100,
-  "start": 0,
-  "total": 2
+}
+
+dependencies {
+    compile(name: 'duer-light-android-sdk-{$version}-release', ext: 'aar')
+    compile 'com.google.code.gson:gson:2.4'
 }
 ```
+注意:上述{$version}指的是SDK版本,请根据下载的SDK进行导入
+## 2.2  AndroidManifest.xml配置
+在AndroidManifest.xml添加如下配置
+```
+<uses-permission android:name="android.permission.RECORD_AUDIO"/>
+<uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+<uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+<uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
-+ parameters
+<application
+    android:icon="@drawable/ic_launcher"
+    android:label="@string/app_name">
+    <!-- begin: duer iot sdk -->
+    <meta-data
+        android:name="com.baidu.dueriot.APP_KEY"
+        android:value="your app key" />
+    <meta-data
+        android:name="com.baidu.dueriot.SECRET_KEY"
+        android:value="your api secret" />
+    <!-- end : duer iot sdk -->
 
-|名称|说明|
-|-|-|
-|version|设备使用版本：0为研发中的设备，1为投入使用的设备|
+	<!-- begin: duer sdk -->
+    <meta-data
+        android:name="com.baidu.duersdk.APP_KEY"
+        android:value="your app key" />
+    <meta-data
+        android:name="com.baidu.duersdk.SECRET_KEY"
+        android:value="your api secret" />
+    <!-- end : duer sdk -->
 
-###### **2.5根据设备UUID和token获取指定设备详细信息 [GET /device/info/by_token]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/info/by_token?deviceUuid=[deviceUuid]&token=[token]
-
-+ parameters
-
-|名称|类型|说明|
+    <!-- begin: baidu speech sdk -->
+    <meta-data
+        android:name="com.baidu.speech.API_KEY"
+        android:value="your api key" />
+    <meta-data
+        android:name="com.baidu.speech.SECRET_KEY"
+        android:value="your api secret" />
+    <service
+        android:name="com.baidu.speech.VoiceRecognitionService"
+        android:exported="false" />
+    <!-- end : baidu speech sdk -->
+</application>
+```
+# 3 SDK功能 ##
+## 3.1  整体结构介绍
+-IoTSDKManager:SDK API管理类,通过此类初始化SDK、获取各类API访问实例、获取用户信息、操作账号等功能 
+-IoTRequestListener各类网络请求接口回调类 
+-IAMWebView用于用户登录授权时封装的WebView 
+-HttpStatus网络请求返回的状态信息,包含HttpCode、ResponseCode以及对应的Message 含义参照名词解释
+## 3.2  接口说明
+### 3.2.1  SDK初始化
+#### IoTSDKManager.initSDK
+**接口功能描述**
+初始化SDK,在自定义Application或者MainActivity中调用如下方法,保证在调用IoT SDK接口前完成初始化,此方法可以在主线中调用。
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-|token|string|设备token|
-
-
-+ headers
+|Context|context|当前Context对象|
+**回调函数** 
+无
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
+IoTSDKManager.getInstance().initSDK(context);
 ```
-
-**Response 200 (application/json)**
-```
-{
-  "data": {
-    "id": 22288,
-    "uuid": "0083000000000a",
-    "projectId": 131,
-    "accountUuid": "5_27712168",
-    "deviceBatchId": 106,
-    "name": "testname",
-    "bindToken": "6dd5790b2163a0132e6c65c6dd6f9ef2",
-    "osVersionId": 160,
-    "status": "UNACTIVATED",
-    "version": 1,
-    "activateTime": null,
-    "lastHeartbeatTime": null,
-    "createTime": "2017-06-07T02:46:30Z",
-    "updateTime": "2017-06-07T06:10:14Z",
-    "osVersion": "0.0.0.0",
-    "deviceUuid": "0083000000000a",
-    "projectName": "doc_test",
-    "type": "WIFI",
-    "seriesName": "故事机",
-    "batchName": "0000"
-  },
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
-
-###### **2.6*根据设备UUID获取指定设备详细信息（需要用户绑定设备）[GET /device/info/by_uuid]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/info/by_uuid?deviceUuid=[deviceUuid]
-
-+ parameters
-
-|名称|类型|说明|
+### 3.2.2 登陆授权（百度账号有效）
+#### IAMWebView.login
+**接口功能描述**
+登陆百度账号
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-
-
-+ headers
+|LoginCallback|callback|登陆回调|
+**回调函数** 
+回调参数将在回调方法LoginCallback.onFinish中传递,返回登陆状态
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": {
-    "id": 22288,
-    "uuid": "0083000000000a",
-    "projectId": 131,
-    "accountUuid": "5_27712168",
-    "deviceBatchId": 106,
-    "name": "testname",
-    "bindToken": "6dd5790b2163a0132e6c65c6dd6f9ef2",
-    "osVersionId": 160,
-    "status": "UNACTIVATED",
-    "version": 1,
-    "activateTime": null,
-    "lastHeartbeatTime": null,
-    "createTime": "2017-06-07T02:46:30Z",
-    "updateTime": "2017-06-07T06:10:14Z",
-    "osVersion": "0.0.0.0"
-  },
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
-##### 3、设备控制
-###### **3.1*获取设备自描述资源 [GET /device/resource]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/resource?deviceUuid=[deviceUuid]
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": {
-    "resources": [
-      {
-        "name": "play",
-        "resourceType": "voice",
-        "type": "string",
-        "label": "播放内容",
-        "description": "可通过“播放儿歌”“播放春天在哪里”“上一首”“下一首”等语音指令控制播放内容",
-        "pattern": {},
-        "uri": "/play",
-        "protocol": [
-          "COAP",
-          "HTTP"
-        ],
-        "method": [
-          "GET",
-          "PUT"
-        ]
-      },
-      {
-        "name": "volume",
-        "resourceType": "voice",
-        "type": "int",
-        "label": "音量",
-        "description": "可通过“调高音量”“调低音量”等语音指令调节设备音量",
-        "pattern": {
-          "min": 0,
-          "max": 16,
-          "step": 1
-        },
-        "uri": "/volume",
-        "protocol": [
-          "COAP",
-          "HTTP"
-        ],
-        "method": [
-          "GET",
-          "PUT"
-        ]
-      },
-      {
-        "name": "switch",
-        "resourceType": "",
-        "type": "bool",
-        "label": "关机",
-        "description": "关闭设备",
-        "uri": "/switch",
-        "protocol": [
-          "COAP",
-          "HTTP"
-        ],
-        "method": [
-          "GET",
-          "PUT"
-        ]
-      },
-      {
-        "name": "power",
-        "resourceType": "",
-        "type": "int",
-        "label": "电量",
-        "description": "查询电量",
-        "pattern": {
-          "min": 0,
-          "max": 100,
-          "step": 1
-        },
-        "uri": "/power",
-        "protocol": [
-          "COAP",
-          "HTTP"
-        ],
-        "method": [
-          "GET"
-        ]
-      }
-    ],
-    "report": []
-  },
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
-+ parameters
-
-|resourceType|说明|
-|-|-|
-|voice|语音数据点|
-
-
-###### **3.4*对指定设备发送控制命令 （同步）[POST /device/control/send]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/control/send
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|
-|deviceUuid|string|设备唯一的标识id|
-|method|string|GET读取数据点数据，PUT修改数据点数据|
-|name|string|数据点标识名|
-|content|string|method为PUT，修改的值|
-
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-+ body
-```
-{
-    "deviceUuid":"01a800000072af",
-	"method":"PUT", 
-	"name":"power", 
-	"content":"1"
-}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": {
-     "code": "2.05",
-     "content": "75"，
-     "name":"power", 
-  },
-  "total": 1,
-  "code": "0",
-  "message": ""
-}
-```
-
-##### 4、数据查询
-###### **4.1查询设备是否在线 [POST /device/query/data/connect]** 
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/query/data/connect
-
-+ parameters
-
-|名称|类型|说明|
-|-|-|-|
-|deviceUuids|string[ ]|设备uuid数组,一次最多查询20个设备uuid|
-
-
-+ headers
-```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
-
-+ body
-```
-{
-    "deviceUuids":["0083000000000a","0083000000000b"]
-}
-```
-
-**Response 200 (application/json)**
-```
-{
-  "data": [
-    {
-      "deviceUuid": "0083000000000a",
-      "status": false
-    },
-    {
-      "deviceUuid": "0083000000000b",
-      "status": false
+IAMWebView webView = (IAMWebView) findViewById(R.id.webview);
+webView.login(new IAMWebView.LoginCallback() {
+    @Override
+    public void onFinish(boolean isSuccess) {
+        if (isSuccess) {
+           // login success
+       }
     }
-  ],
-  "code": "0",
-  "message": "",
-  "total": 1
-}
+});
 ```
-
-###### **4.2*查询设备历史数据 [GET /device/query/data/history]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/query/data/history?deviceUuid=[deviceUuid]&propertyKey=[propertyKey]&propertyType=[propertyType]&startTime=[startTime]&endTime=[endTime]&nextPage=[nextPage]
-
-+ parameters
-
-|名称|类型|说明|
+#### IoTSDKManager.getAccessToken
+**接口功能描述**
+获取用户AccessToken,包含token以及以及有效时间。AccessToken可以和开发者自身的账号体系进行对接。
+**前置条件** 
+无
+**传入参数**
+无
+**回调函数** 
+无
+**实例**
+```
+IoTSDKManager.getInstance().getAccessToken();
+```
+#### IoTSDKManager.getUserInfo
+**接口功能描述**
+获取用户UserInfo,UserInfo中包含用户名、账号类型等信息
+**前置条件** 
+无
+**传入参数**
+无
+**回调函数** 
+无
+**实例**
+```
+IoTSDKManager.getInstance().getUserInfo();
+```
+#### IoTSDKManager.logout
+**接口功能描述**
+退出当前用户账号
+**前置条件** 
+无
+**传入参数**
+无
+**回调函数** 
+无
+**实例**
+```
+IoTSDKManager.getInstance().logout();
+```
+#### IoTSDKManager.setAccessToken
+**接口功能描述**
+设置第三方登陆后的AccessToken
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|deviceUuid|string| 设备ID|
-|propertyKey|string| 数据点，可选，不选默认全部数据点
-|propertyType|string| 数据点类型（REPORT,RESOURCE），可选，不选默认全部数据点
-|startTime|string|utc时间，例如为2017-04-14T08:31:10Z
-|endTime|string|utc时间，limit (int) 默认20，不能超过100
-|nextPage |long|下一页数据的参数，如果为null，则表示没有数据
-
-
-
-+ headers
+|AccessToken|accessToken|表示用户身份的Token|
+**回调函数** 
+无
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
+IoTSDKManager.getInstance().setAccessToken(accessToken);
 ```
-
-**Response 200 (application/json)**
-```
-{
-    "data": [
-    {
-      "timeStamp": 1495044775000,
-      "value": "{id=108956,+rate=8000,+segment=15,+eof=true,+channel=1}",
-      "key": "voice_control"
-    },
-    {
-      "timeStamp": 1495034776000,
-      "value": "{id=108956,+rate=8000,+segment=7,+voice_data=JgAAACwL9NxOU7tUy0tFYxxkcVz1h8fh02TJ/VEyVc9mtSD2fK0fsMl3JgAAACunuCmTZbF4FkujpJ4ZJXdZOckSLoOx5Y81du5dR8Roa99kmYlHJgAAAC+2OCt1oWqfuMN1dQUjF5kdiYX5vlJPsfCnXPVXiXk7MVMG9HFnJgAAACk65VyUSh4jsa8DdeoliWRmBhFkhhKncvUyC6B5FujAXXDmUvKXJgAAACkyl1yTTcqk3BKz43cmMU2B1bu6dpMXqiHOuz0ESYvJ2RU8X5bnJgAAACkyl1yyTF995XLf6sbe4XjP6BJjHFOHmCSPPOekCeJWi1IkRzdnJgAAACkii2nSTTLLh7aTF5ImRV9AlkFmd5MHjsqAUuNvKbxR55ZX2Eh3JgAAACk8i1XvS38iJoXiNbHCg8zZKfC/AJMbiNnYYdQREGrWDhhfrI4XJgAAAC24ZhLNIs9I/dEPzfB6q4HjUTa7At2H0FV32IyR4WPrkCy4Nh33JgAAAC+T5JTQJZ6Q9IyPxvJ9Ost7hOvO64T5g7s69SaiC8Tu8MopR7HHJgAAACoXH/fw0e9Yh8q1Sk7W4UTtl8rr6S1B6c/Uj4UC9W7r7pc2WGXHJgAAACoXWvfyMCZeZhKa05Gtk0cdwZ+bDSHLv10+d9adOYRi8EnmDaanJgAAACgTsNjSxas/2fqHcNk5n4F0WTmgQMwOqrGGF6On/lnq7ragwDbXJgAAAC4c/PDSOaOH9ZNsnhMCzWnVl9leQicj3Q4eoHNk4wHtk1rAv7vnJgAAACgLWtgTKI6Bi01uLkNmmUP6HcZmL8dB2B3FvWh+4E/R1VA+JyzH,+eof=false,+channel=1}",
-      "key": "voice_control"
-    },
-    {
-      "timeStamp": 1495034185000,
-      "value": "{id=108955,+rate=8000,+segment=15,+eof=true,+channel=1}",
-      "key": "voice_control"
-    },
-    {
-      "timeStamp": 1495034085000,
-      "value": "{id=108955,+rate=8000,+segment=14,+voice_data=JgAAACzTCkdJzVapC3RUm9emm6IxGPJJcuDH0UWIsjA4vvjtpoCENhb3JgAAACk3nlTJZcNGkOOmJPmxD75a+oNHLOLc3/bMqVlXQOHse+5pZU8HJgAAAC/fKr9Jerd7UihNgdzxN5gWPBATBj09yDo0/IhaAOP/ras+0KrnJgAAAC3Gk2SJRnehkLde64+4+fAbjpT2SkdV1FuzSEbMo27d8hxbbaunJgAAACzbZA5I9/s2Kul+xdeSD5CrV9v4yQeH2JyFXBavYEFnru55xMFHJgAAACzdSr5IdrbnqtKPqlnXzbQ7kR69bL9wwXXnOwaAaursi0JuO/jnJgAAAC3GnK+JpXcc0PWP6JfOO5QF4LsELq+N0W1xATL83D5tKB/yIvVHJgAAAC3crKtJGrvRsE8y6Wwpj5y15Bjrbo09yjKbHUnmXuboRYJzBOrXJgAAACzOFL9JtPdt9bMK/HVq4XrXnaod28xdoUwsDezFCZbpjnh/hFyHJgAAACzGir5poV9V9ADljYWUN7I9nXC5GO84qk4aEt3WBv5RHAd7/eQnJgAAACzear5pMzc9eP3IeXZoj2YeKQRguSUZ0A4lV2556w3Um07cVKJHJgAAACk2uFco3Y8KiiCLDWIt9ZhetT1ljfZRwV+3T2reSabukG1rlxlHJgAAACzGC9qKim5CJUQyPeEYMzTCMXrHQdmdqmonOTNPh4rnZC2GWB+nJgAAACzSvrtJAn9pFXsdHtVhW12QSROPpB5Tte1EEFcp483M71quHwvHJgAAACzd6r2IFX9GaZPG2dBPj4ir1RfpxRz2xa8Qi44Uky7X40BaqpLH,+eof=false,+channel=1}",
-      "key": "voice_control"
-    },
-    ...
-    ]
-    "nextPage": 1495034775000,
-    "limit": 4
-}
-```
-
-###### **4.3*查询设备实时数据[GET /device/query/data/realtime]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/query/data/realtime
-
-+ parameters
-
-|名称|类型|说明|
+### 3.2.3 设备相关接口
+和设备相关的接口使用DeviceAPI调用,通过IoTSDKManager.createDeviceAPI()获取DeviceAPI实例。
+#### DeviceAPI.bindDevice
+**接口功能描述**
+设备绑定需要设备的deviceUuid以及设备的token,开发者可以使用二维码扫描的方式扫描设备上二维码获取到,也可以通过用户手动输入获取。此处返回的DeviceInfo并非全信息
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|deviceUuid|string| 设备ID
-| propertyKey |string| 设备自描述上报的字段，比如空调有温度属性（temperature），设备会上报temperature这个字段，那么对温度的历史数据查询就是：propertyKey = temperature
-
-
-+ headers
+|String |deviceUuid|设备uuid|
+|String |deviceToken|设备bind token|
+|IoTRequestListener<DeviceInfo>|listener|请求回调|
+**回调函数** 
+回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
+IoTSDKManager.getInstance().createDeviceAPI().bindDevice(uuid, token, new IoTRequestListener<DeviceInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceInfo obj, PageInfo info) {
+        // 绑定成功
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+        if (code.getResponseCode() == 1210){
+            //该设备已被其他账号绑定
+        } else if (code.getResponseCode() == 1223) {
+            //App没有绑定该产品
+        } else {
+            //绑定失败
+        }
+    }
+
+    @Override
+    public void onError(IoTException error) {
+        //绑定异常
+    }
+});
 ```
-
-
-**Response 200 (application/json)**
-```
-{
-    "data": {
-        "value": 94,
-        "timeStamp": 1495034775000
-    },
-    "code": "0",
-    "message": "",
-    "total": 1
-}
-```
-##### 5、用户设备升级
-###### **5.1*查询设备最新版本 [GET /device/ota/new_version]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/ota/new_version?deviceUuid=[deviceUuid]
-
-+ parameters
-
-|名称|类型|说明|
+#### DeviceAPI.unBindDevice
+**接口功能描述**
+根据设备uuid解除设备绑定,解除绑定后无法再控制设备与获取设备信息
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|deviceUuid|string|设备ID|
-
-
-+ headers
+|String |deviceUuid|设备uuid|
+|IoTRequestListener<DeviceInfo>|listener|请求回调|
+**回调函数** 
+回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
+IoTSDKManager.getInstance().createDeviceAPI().unBindDevice(uuid, new IoTRequestListener<DeviceInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceInfo obj, PageInfo info) {
+        //解绑成功
+    }
 
+    @Override
+    public void onFailed(HttpStatus code) {
+        //解绑失败
+    }
 
-**Response 200 (application/json)**
+    @Override
+    public void onError(IoTException error) {
+        //解绑异常
+    }
+});
 ```
-{
-  "data": {
-    "deviceUuid": "01a800000072b0",
-    "packageId": 484,
-    "strategyId": 1132,
-    "type": "PASSIVE",
-    "newOsVersion": "1.1.1.1"，
-    "originalOsVersion": "1.0.1.1"
-  },
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
-+ parameters
-
-|data|otaTaskId|说明|
+#### DeviceAPI.getDeviceInfo
+**接口功能描述**
+根据deviceUuid获取到单个设备的信息,异步返回DeviceInfo
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|null||设备不需要升级|
-|不为null|大于0|设备正在升级|
-|不为null|otaTaskId=0|type为 “PASSIVE”，需要用户手动升级|
+|String |deviceUuid|设备uuid|
+|IoTRequestListener<DeviceInfo>|listener|请求回调|
+**回调函数** 
+回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createDeviceAPI().getDeviceInfo(uuid, new IoTRequestListener<DeviceInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceInfo obj, PageInfo info) {
+    }
 
-###### **5.2获取版本详情 [GET /device/ota/version/info]**
-**Request**
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
 
-+ url 
-https://openapi-iot.baidu.com/v1/device/ota/version/info?packageId=[packageId]
-
-+ parameters
-
-|名称|类型|说明|
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+#### DeviceAPI.getUnbindDeviceInfo
+**接口功能描述**
+根据deviceUuid获取到单个未绑定的设备的信息,异步返回DeviceInfo
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|packageId|long|OTA版本id|
-
-
-+ headers
+|String |deviceUuid|设备uuid|
+|String |bindToken|设备bindToken|
+|IoTRequestListener<DeviceInfo>|listener|请求回调|
+**回调函数** 
+回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
+IoTSDKManager.getInstance().createDeviceAPI().getUnbindDeviceInfo(uuid, bindToken, new IoTRequestListener<DeviceInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceInfo obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
 ```
-
-
-**Response 200 (application/json)**
-```
-{
-     "data": {
-          "id": 2,
-          "projectId": 4,
-          "osVersionId": 4,
-          "description": "tt",
-          "size": 521,
-          "status": "RELEASED",
-          "createTime": "2015-11-07T06:07:51Z",
-          "updateTime": "2015-11-07T06:07:51Z",
-          "osVersion": "1.0.0.0"
-      },
-      "total": 1,
-      "code": "0",
-      "message": ""
- }
-```
-
-###### **5.3*指定设备按照指定OTA版本升级 [POST /device/ota/update]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/ota/update
-
-+ parameters
-
-|名称|类型|说明|
+#### DeviceAPI.getUserAllDevices
+**接口功能描述**
+获取当前登录用户的所有设备信息,异步返回设备列表。支持分页,通过PageInfo设置start和limit,如果PageInfo为空则默认查询所有
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|packageId|string|OTA版本id|
-|deviceUuid|string|设备uuid|
-|strategyId|string||
-
-
-+ headers
+|IoTRequestListener<DeviceInfo>|listener|请求回调|
+|PageInfo |pageInfo|分页信息|
+**回调函数** 
+回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
+IoTSDKManager.getInstance().createDeviceAPI().getUserAllDevices(new IoTRequestListener<List<DeviceInfo>>() {
+
+    @Override
+    public void onSuccess(HttpStatus code, List<DeviceInfo> obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+}, null);
 ```
-
-+ body
-```
-{
-    "packageId": 480,
-    "deviceUuid":"01a60000000004",
-    "strategyId": 123 //可选
-}
-```
-
-**Response 201 (application/json)**
-```
-{
-  "data": true,
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
-
-###### **5.4*查询升级状态 [GET /device/ota/update/status]**
-**Request**
-
-+ url 
-https://openapi-iot.baidu.com/v1/device/ota/update/status?deviceUuid=[deviceUuid]
-
-+ parameters
-
-|名称|类型|说明|
+#### DeviceAPI.setDeviceName
+**接口功能描述**
+通过设备deviceUuid修改设备别名,异步返回设备新信息
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|deviceUuid|string|设备uuid|
-
-
-+ headers
+|String |deviceUuid|设备uuid|
+|String |name|新设备名称|
+|IoTRequestListener<DeviceInfo>|listener|请求回调|
+**回调函数** 
+回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
 ```
-X-IOT-APP: {apikey}
-X-IOT-Signature: {sign}
-X-IOT-Token: {token}
-```
+IoTSDKManager.getInstance().createDeviceAPI().setDeviceName(uuid, "New Name", new IoTRequestListener<DeviceInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceInfo obj, PageInfo info) {
+    }
 
-**Response 200 (application/json)**
-```
-{
-  "data": {
-    "id": 77,
-    "taskId": 13450,
-    "deviceUuid": "01a800000072db",
-    "packageId": 508,
-    "otaStrategyId": 1148,
-    "osVersionId": 751,
-    "status": "SUCCESS",
-    "eventLog": "2017-04-10 10:26:02 [Success] OK\n2017-04-11 02:26:02 {\"transaction\":\"77\",\"event\":0}\n2017-04-11 02:26:20 {\"percent\":0,\"transaction\":\"77\",\"event\":4}\n2017-04-11 02:26:20 {\"transaction\":\"77\",\"event\":6}\n2017-04-11 02:26:20 {\"transaction\":\"77\",\"event\":2}\n2017-04-11 02:26:20 {\"transaction\":\"77\",\"event\":10}\n",
-    "createTime": "2017-04-10T10:26:00Z",
-    "updateTime": "2017-04-10T10:26:21Z",
-    "osVersion": "4.0.0.2"
-  },
-  "code": "0",
-  "message": "",
-  "total": 1
-}
-```
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
 
-+ parameters
-
-|status|添加字段|说明|
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+#### DeviceAPI.getDeviceResource
+**接口功能描述**
+根据设备deviceUuid获取设备的自描述资源
+设备自描述资源是指设备支持的相关属性,通过DeviceResource对这些属性进行描述。开发者可以使用这些属性对设备进行控制,读取设备的信息
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
 |-|-|-|
-|CREATED||暂未开始升级|
-|SUCCESS||升级成功|
-|INSTALLED||推送成功|
-|RUNNING|补充percent字段|升级进度，0~1|
-|FAILED|补充failure字段|错误描述|
+|String |deviceUuid|设备uuid|
+|IoTRequestListener<DeviceResource>|listener|请求回调|
+**回调函数** 
+回调参数DeviceResource将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createDeviceAPI().getDeviceResource(uuid, new IoTRequestListener<DeviceResource>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceResource obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+#### DeviceAPI.controlDevice
+**接口功能描述**
+根据自描述资源中描述的参数类型,范围传入参数控制设备。成功调用后会返回对应的任务id。
+支持对批量设备进行控制。
+**前置条件** 
+根据DeviceAPI.getDeviceResource获取到的设备自描述资源控制设备。
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String|device|设备uuid|
+|DeviceResource.Resource|resource|设备自描述资源|
+|RequestMethod|protocol|method|
+|Object|value|参数值|
+|IoTRequestListener|listener|请求回调|
+
+
+**回调函数** 
+回调参数ControlResult将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createDeviceAPI().controlDevices(device, resource, method, value, new IoTRequestListener<ControlResult>() {
+    @Override
+    public void onSuccess(HttpStatus code, ControlResult obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+}); 
+```
+#### DeviceAPI.getDeviceHistory
+**接口功能描述**
+根据设备的uuid,查询某个时间段内某个数据点上报的历史数据,支持分页查询
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String|deviceUuid|设备uuid|
+|String|propertyKey|数据点名称|
+|String|startTime|起始时间 格式"yyyy-MM-dd HH:mm:ss"|
+|String|endTime|结束时间 格式"yyyy-MM-dd HH:mm:ss"|
+|IoTRequestListener|listener|请求回调|
+|PageInfo|info|分页信息|
+
+**回调函数** 
+回调参数List PropertyData IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createDeviceAPI().getDeviceHistory(uuid, propertyKey, startTime, endTime, new IoTRequestListener
+    @Override
+    public void onSuccess(HttpStatus code, List<PropertyData> obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+}, null);
+```
+#### DeviceAPI.getDeviceHistory
+**接口功能描述**
+根据设备的uuid,查询某个时间段内某个数据类型（控制数据点、上报数据点）上报的历史数据,支持分页查询
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String|deviceUuid|设备uuid|
+|PropertyType|propertyType|数据点类型|
+|String|startTime|起始时间 格式"yyyy-MM-dd HH:mm:ss"|
+|String|endTime|结束时间 格式"yyyy-MM-dd HH:mm:ss"|
+|IoTRequestListener|listener|请求回调|
+|PageInfo|info|分页信息|
+
+**回调函数** 
+回调参数List PropertyData IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createDeviceAPI().getDeviceHistory(uuid, propertyKey, startTime, endTime, new IoTRequestListener
+    @Override
+    public void onSuccess(HttpStatus code, List<PropertyData> obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+}, null);
+```
+#### DeviceAPI.getDevicesOnlineStatus
+**接口功能描述**
+查询一组设备的uuid在线状态
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String[]|deviceUuids|一组设备uuid|
+|IoTRequestListener|listener|请求回调|
+
+**回调函数** 
+回调参数List DeviceOnlineStatus Listener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createDeviceAPI().getDevicesOnlineStatus(deviceUuids, new IoTRequestListener
+    @Override
+    public void onSuccess(HttpStatus code, List<DeviceOnlineStatus> obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+### 3.2.4 OTA相关接口
+和OTA升级相关的接口使用UpdateAPI调用,通过IoTSDKManager.createUpdateAPI()获取UpdateAPI实例。
+#### UpdateAPI.checkOta
+**接口功能描述**
+根据设备uuid查询该设备OTA信息
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String|deviceUuid|设备uuid|
+|IoTRequestListener|listener|请求回调|
+
+**回调函数** 
+回调参数List<DeviceOtaInfo>将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createUpdateAPI().checkOta(uuid, new IoTRequestListener<DeviceOtaInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, DeviceOtaInfo otaInfo, PageInfo info) {
+        if (otaInfo.otaTaskId > 0) {
+            //正在更新固件
+        } else if (otaInfo.otaTaskId == 0) {
+            //可更新到固件版本：otaInfo.newOsVersion
+        } else {
+            //当前是最新版本
+       }
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+#### UpdateAPI.getOtaPackageInfo
+**接口功能描述**
+根据OTA packageId查询OTA升级包信息
+**前置条件** 
+根据UpdateAPI.checkOta获取到的OTA packageId
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String|packageId|OTA包id|
+|IoTRequestListener|listener|请求回调|
+
+**回调函数** 
+回调参数OtaPakageInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createUpdateAPI().getOtaPackageInfo(packageId, new IoTRequestListener<OtaPackageInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, OtaPackageInfo obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+#### UpdateAPI.createOtaTask
+**接口功能描述**
+根据DeviceOtaInfo传入参数执行设备升级。成功调用后会返回OTA任务是否创建成功。
+**前置条件** 
+UpdateAPI.checkOta获取到的DeviceOtaInfo
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|DeviceOtaInfo|otaInfo|OTA信息实体|
+|IoTRequestListener|listener|请求回调|
+
+**回调函数** 
+回调参数DeviceOtaInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createUpdateAPI().createOtaTask(otaInfo, new IoTRequestListener<Boolean>() {
+    @Override
+    public void onSuccess(HttpStatus code, Boolean obj, PageInfo info) {
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
+#### UpdateAPI.getOtaTaskStatus
+**接口功能描述**
+根据设备uuid传入参数查询OTA状态
+**前置条件** 
+无
+**传入参数**
+|类型|名称|描述|
+|-|-|-|
+|String|deviceUuid|设备uuid|
+|IoTRequestListener|listener|请求回调|
+
+**回调函数** 
+回调参数OtaTaskInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
+**实例**
+```
+IoTSDKManager.getInstance().createUpdateAPI().getOtaTaskStatus(deviceUuid, new IoTRequestListener<OtaTaskInfo>() {
+    @Override
+    public void onSuccess(HttpStatus code, OtaTaskInfo obj, PageInfo info) {
+        if (obj.status == OtaTaskInfo.OtaStatus.SUCCESS) {
+            //升级成功
+        } else if (obj.status == OtaTaskInfo.OtaStatus.FAILED) {
+            //升级失败
+        }
+    }
+
+    @Override
+    public void onFailed(HttpStatus code) {
+    }
+
+    @Override
+    public void onError(IoTException error) {
+    }
+});
+```
