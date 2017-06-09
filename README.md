@@ -158,9 +158,11 @@ IoTSDKManager.getInstance().initSDK(context);
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |LoginCallback|callback|登陆回调|
+
 **回调函数** 
 回调参数将在回调方法LoginCallback.onFinish中传递,返回登陆状态
 **实例**
@@ -220,9 +222,11 @@ IoTSDKManager.getInstance().logout();
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |AccessToken|accessToken|表示用户身份的Token|
+
 **回调函数** 
 无
 **实例**
@@ -237,11 +241,13 @@ IoTSDKManager.getInstance().setAccessToken(accessToken);
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String |deviceUuid|设备uuid|
 |String |deviceToken|设备bind token|
 |IoTRequestListener<DeviceInfo>|listener|请求回调|
+
 **回调函数** 
 回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -275,10 +281,12 @@ IoTSDKManager.getInstance().createDeviceAPI().bindDevice(uuid, token, new IoTReq
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String |deviceUuid|设备uuid|
 |IoTRequestListener<DeviceInfo>|listener|请求回调|
+
 **回调函数** 
 回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -306,10 +314,12 @@ IoTSDKManager.getInstance().createDeviceAPI().unBindDevice(uuid, new IoTRequestL
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String |deviceUuid|设备uuid|
 |IoTRequestListener<DeviceInfo>|listener|请求回调|
+
 **回调函数** 
 回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -334,11 +344,13 @@ IoTSDKManager.getInstance().createDeviceAPI().getDeviceInfo(uuid, new IoTRequest
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String |deviceUuid|设备uuid|
 |String |bindToken|设备bindToken|
 |IoTRequestListener<DeviceInfo>|listener|请求回调|
+
 **回调函数** 
 回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -363,10 +375,12 @@ IoTSDKManager.getInstance().createDeviceAPI().getUnbindDeviceInfo(uuid, bindToke
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |IoTRequestListener<DeviceInfo>|listener|请求回调|
 |PageInfo |pageInfo|分页信息|
+
 **回调函数** 
 回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -392,11 +406,13 @@ IoTSDKManager.getInstance().createDeviceAPI().getUserAllDevices(new IoTRequestLi
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String |deviceUuid|设备uuid|
 |String |name|新设备名称|
 |IoTRequestListener<DeviceInfo>|listener|请求回调|
+
 **回调函数** 
 回调参数DeviceInfo将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -422,10 +438,12 @@ IoTSDKManager.getInstance().createDeviceAPI().setDeviceName(uuid, "New Name", ne
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String |deviceUuid|设备uuid|
 |IoTRequestListener<DeviceResource>|listener|请求回调|
+
 **回调函数** 
 回调参数DeviceResource将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
@@ -451,6 +469,7 @@ IoTSDKManager.getInstance().createDeviceAPI().getDeviceResource(uuid, new IoTReq
 **前置条件** 
 根据DeviceAPI.getDeviceResource获取到的设备自描述资源控制设备。
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String|device|设备uuid|
@@ -484,6 +503,7 @@ IoTSDKManager.getInstance().createDeviceAPI().controlDevices(device, resource, m
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String|deviceUuid|设备uuid|
@@ -517,6 +537,7 @@ IoTSDKManager.getInstance().createDeviceAPI().getDeviceHistory(uuid, propertyKey
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String|deviceUuid|设备uuid|
@@ -550,6 +571,7 @@ IoTSDKManager.getInstance().createDeviceAPI().getDeviceHistory(uuid, propertyKey
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String[]|deviceUuids|一组设备uuid|
@@ -581,6 +603,7 @@ IoTSDKManager.getInstance().createDeviceAPI().getDevicesOnlineStatus(deviceUuids
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String|deviceUuid|设备uuid|
@@ -589,6 +612,7 @@ IoTSDKManager.getInstance().createDeviceAPI().getDevicesOnlineStatus(deviceUuids
 **回调函数** 
 回调参数List<DeviceOtaInfo>将在回调方法IoTRequestListener.onSuccess中传递,返回data
 **实例**
+
 ```
 IoTSDKManager.getInstance().createUpdateAPI().checkOta(uuid, new IoTRequestListener<DeviceOtaInfo>() {
     @Override
@@ -617,6 +641,7 @@ IoTSDKManager.getInstance().createUpdateAPI().checkOta(uuid, new IoTRequestListe
 **前置条件** 
 根据UpdateAPI.checkOta获取到的OTA packageId
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String|packageId|OTA包id|
@@ -640,12 +665,14 @@ IoTSDKManager.getInstance().createUpdateAPI().getOtaPackageInfo(packageId, new I
     }
 });
 ```
+
 #### UpdateAPI.createOtaTask
 **接口功能描述**
 根据DeviceOtaInfo传入参数执行设备升级。成功调用后会返回OTA任务是否创建成功。
 **前置条件** 
 UpdateAPI.checkOta获取到的DeviceOtaInfo
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |DeviceOtaInfo|otaInfo|OTA信息实体|
@@ -675,6 +702,7 @@ IoTSDKManager.getInstance().createUpdateAPI().createOtaTask(otaInfo, new IoTRequ
 **前置条件** 
 无
 **传入参数**
+
 |类型|名称|描述|
 |-|-|-|
 |String|deviceUuid|设备uuid|
