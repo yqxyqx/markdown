@@ -71,7 +71,7 @@ mbed compile -t ARM -m K64F
 下面是烧写时会用到的工具，前两个工具是RDA提供的：
 
 |名称|下载链接|RDA下载地址|
-|---|---|
+|---|---|-|
 |Flash测试工具 |[下载](http://open.duer.baidu.com/iot/download/RDA5981_Flash_Test_Tool_0224.rar)|[由此进入](http://bbs.rdamicro.com/forum.php?mod=viewthread&tid=109&extra=page%3D1)|
 |Merge Tool|[下载](http://open.duer.baidu.com/iot/download/MergeTool_V01.00.01_20170407.rar)|[由此进入](http://bbs.rdamicro.com/forum.php?mod=viewthread&tid=201&extra=page%3D2)|
 |image-pack.py  |[下载](http://open.duer.baidu.com/iot/download/image-pack.py)|无|
